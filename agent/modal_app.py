@@ -1,4 +1,5 @@
 import modal
+import json
 
 
 image = modal.Image.from_dockerfile("Dockerfile")
@@ -13,3 +14,10 @@ def run_job(job_id: str, task: str) -> dict:
 
     result = run_agent_brain(job_id, task)
     return result
+
+
+@app.local_entrypoint()
+def main(job_id: str, task: str):
+    """Local entrypoint to run the job and print pure JSON."""
+    res = run_job.remote(job_id, task)
+    print(json.dumps(res))
