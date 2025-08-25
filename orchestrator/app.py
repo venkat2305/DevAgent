@@ -36,6 +36,7 @@ class ScheduleResponse(BaseModel):
 
 class StatusResponse(BaseModel):
     status: str
+    download: str | None = None
 
 
 @app.post("/schedule", response_model=ScheduleResponse)
@@ -66,9 +67,24 @@ def status(job_id: str):
             result = handle.get(timeout=0)
             job["status"] = "complete"
             job["result"] = result
+            # Persist artifact to a temp file and expose a simple download path
+            if isinstance(result, dict) and "artifact_b64" in result:
+                import base64
+                from pathlib import Path
+                artifacts_root = Path("/tmp/orchestrator_artifacts")
+                artifacts_root.mkdir(parents=True, exist_ok=True)
+                out_path = artifacts_root / f"{job_id}-artifact.zip"
+                data = base64.b64decode(result["artifact_b64"])  # type: ignore
+                out_path.write_bytes(data)
+                job["download_path"] = str(out_path)
         except Exception:
             job["status"] = "running"
-    return {"status": job["status"]}
+    download = None
+    if job.get("status") == "complete" and job.get("download_path"):
+        # For now we just echo the file path; a proper
+        # file-serving route can be added later
+        download = job.get("download_path")
+    return {"status": job["status"], "download": download}
 
 
 # Optional health check for convenience

@@ -25,9 +25,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
 COPY . /app
 
 # Modal's @modal.asgi_app will run the ASGI server; no CMD needed here.
