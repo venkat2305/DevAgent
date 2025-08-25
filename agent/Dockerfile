@@ -35,3 +35,7 @@ EXPOSE 6080
 
 # Make entrypoint executable for optional local runs
 RUN chmod +x /app/entrypoint.sh
+
+# Ensure headless desktop stack starts; Modal will override CMD when needed
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["sleep", "infinity"]

@@ -8,3 +8,5 @@ Stopping app - local entrypoint completed.
 
 
 ((.venv) ) sai@CHSReddys-Laptop agent % modal run modal_app.py::run_job --job-id 123 --task "hello world" > out.json
+
+((.venv) ) sai@CHSReddys-Laptop agent % modal run modal_app.py --task "GUI Test" --job-id 123
