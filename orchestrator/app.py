@@ -17,13 +17,18 @@ JOBS: dict[str, dict] = {}
 
 
 def _get_modal_run_fn():
-    """Return the Modal run_job function defined in the agent app."""
+    """Return the Modal function defined in the agent app.
+
+    Prefer run_job; fall back to run_agent for compatibility.
+    """
     if modal is None:
         raise RuntimeError(
             "modal is not installed; cannot schedule remote jobs"
         )
-    # Expecting a function named run_job in app 'glassbox-agent'
-    return modal.Function.lookup("glassbox-agent", "run_job")
+    try:
+        return modal.Function.lookup("glassbox-agent", "run_job")
+    except Exception:
+        return modal.Function.lookup("glassbox-agent", "run_agent")
 
 
 class ScheduleRequest(BaseModel):
@@ -37,6 +42,7 @@ class ScheduleResponse(BaseModel):
 class StatusResponse(BaseModel):
     status: str
     download: str | None = None
+    vnc_url: str | None = None
 
 
 @app.post("/schedule", response_model=ScheduleResponse)
@@ -61,6 +67,16 @@ def status(job_id: str):
     if not job:
         raise HTTPException(status_code=404, detail="job not found")
     handle: Any | None = job.get("handle")
+    vnc_url: str | None = None
+    # Try to fetch live VNC URL published by agent via Modal Dict
+    if modal is not None:
+        try:
+            session_meta = modal.Dict.from_name("glassbox-session-meta", create_if_missing=True)
+            meta = session_meta.get(job_id)
+            if isinstance(meta, dict):
+                vnc_url = meta.get("vnc_url")
+        except Exception:
+            vnc_url = None
     if handle and job.get("status") in {"queued", "running"}:
         try:
             # Non-blocking poll: returns immediately if not done
@@ -84,7 +100,7 @@ def status(job_id: str):
         # For now we just echo the file path; a proper
         # file-serving route can be added later
         download = job.get("download_path")
-    return {"status": job["status"], "download": download}
+    return {"status": job["status"], "download": download, "vnc_url": vnc_url}
 
 
 # Optional health check for convenience

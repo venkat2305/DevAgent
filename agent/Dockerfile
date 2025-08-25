@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     novnc \
     websockify \
     xdotool \
+    x11-apps \
+    xterm \
     # Node (Debian repo version is OK for v1)
     nodejs \
     npm \
@@ -30,7 +32,8 @@ COPY . /app
 # Modal's @modal.asgi_app will run the ASGI server; no CMD needed here.
 
 # Headless display for future GUI flows
-ENV DISPLAY=:0
+ENV DISPLAY=:0 \
+    DESKTOP_DEMO=1
 EXPOSE 6080
 
 # Make entrypoint executable for optional local runs
