@@ -1,34 +1,23 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import uuid
 from typing import Any
-
-# Modal is optional at import time (useful for local dev
-# without modal installed)
-try:
-    import modal  # type: ignore
-except Exception:  # pragma: no cover
-    modal = None  # type: ignore
+import modal
 
 app = FastAPI(title="DevAgent Orchestrator", version="0.1.0")
 
-# In-memory job store for Step 1 (will replace with SQLite/Redis later)
+# In-memory job store (will replace with SQLite/Redis later)
 JOBS: dict[str, dict] = {}
 
 
 def _get_modal_run_fn():
-    """Return the Modal function defined in the agent app.
-
-    Prefer run_job; fall back to run_agent for compatibility.
-    """
+    """Return the Modal function defined in the agent app."""
     if modal is None:
         raise RuntimeError(
             "modal is not installed; cannot schedule remote jobs"
         )
-    try:
-        return modal.Function.lookup("glassbox-agent", "run_job")
-    except Exception:
-        return modal.Function.lookup("glassbox-agent", "run_agent")
+    return modal.Function.from_name("glassbox-agent", "run_job")
 
 
 class ScheduleRequest(BaseModel):
@@ -52,12 +41,15 @@ def schedule(req: ScheduleRequest):
     # Try spawning on Modal; if modal not configured, leave as queued
     try:
         run_fn = _get_modal_run_fn()
+        print("run fn", run_fn)
         handle = run_fn.spawn(job_id, req.task)
+        print("handle", handle)
         JOBS[job_id]["handle"] = handle
         JOBS[job_id]["status"] = "running"
     except Exception as e:
         # Keep queued/failed info for visibility
         JOBS[job_id]["error"] = str(e)
+        print("error", e)
     return {"id": job_id}
 
 
@@ -71,7 +63,8 @@ def status(job_id: str):
     # Try to fetch live VNC URL published by agent via Modal Dict
     if modal is not None:
         try:
-            session_meta = modal.Dict.from_name("glassbox-session-meta", create_if_missing=True)
+            session_meta = modal.Dict.from_name(
+                "glassbox-session-meta", create_if_missing=True)
             meta = session_meta.get(job_id)
             if isinstance(meta, dict):
                 vnc_url = meta.get("vnc_url")
@@ -103,7 +96,36 @@ def status(job_id: str):
     return {"status": job["status"], "download": download, "vnc_url": vnc_url}
 
 
-# Optional health check for convenience
+@app.get("/download/{job_id}")
+def download(job_id: str):
+    """Serve the artifact zip for a completed job.
+
+    Returns 404 if the job is unknown or not complete, or the artifact is missing.
+    """
+    # Primary: serve from in-memory job record
+    job = JOBS.get(job_id)
+    path: str | None = None
+    if job:
+        path = job.get("download_path")
+
+    # Fallback: if job record not present (e.g., server restarted),
+    # try the conventional path used by the status handler.
+    if not path:
+        from pathlib import Path
+        p = Path("/tmp/orchestrator_artifacts") / f"{job_id}-artifact.zip"
+        if p.exists():
+            path = str(p)
+
+    if not path:
+        raise HTTPException(
+            status_code=404, detail="artifact not available yet")
+
+    try:
+        return FileResponse(path, media_type="application/zip", filename=f"{job_id}.zip")
+    except Exception:
+        raise HTTPException(status_code=404, detail="artifact file missing")
+
+
 @app.get("/healthz")
 def healthz():
     return {"ok": True}

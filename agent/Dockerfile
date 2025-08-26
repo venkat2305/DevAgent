@@ -31,6 +31,10 @@ COPY . /app
 
 # Modal's @modal.asgi_app will run the ASGI server; no CMD needed here.
 
+# Python deps for agent brain (Gemini client)
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir google-generativeai==0.7.2
+
 # Headless display for future GUI flows
 ENV DISPLAY=:0 \
     DESKTOP_DEMO=1

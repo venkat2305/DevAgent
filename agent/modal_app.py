@@ -10,8 +10,8 @@ app = modal.App("glassbox-agent", image=image)
 SESSION_META = modal.Dict.from_name("glassbox-session-meta", create_if_missing=True)
 
 
-def _run_impl(job_id: str, task: str) -> dict:
-    """Core implementation shared by all entry points."""
+def run_job(job_id: str, task: str) -> dict:
+    """Run job and expose noVNC on :6080 while executing."""
     from main import run_agent_brain
 
     # Expose the noVNC port publicly; publish the URL for the orchestrator
@@ -30,33 +30,24 @@ def _run_impl(job_id: str, task: str) -> dict:
             pass
 
 
-# Define two functions so orchestrator can look up either name
-def run_job(job_id: str, task: str) -> dict:
-    """Run job and expose noVNC on :6080 while executing."""
-    return _run_impl(job_id, task)
-
-
-def run_agent(job_id: str, task: str) -> dict:
-    """Alias for run_job; kept for compatibility."""
-    return _run_impl(job_id, task)
-
-
-# Apply Modal decorator dynamically to optionally include port exposure for both
+# Apply Modal decorator dynamically to include port exposure
 try:
-    # Use Any to sidestep static checks for optional kwargs across SDK versions
     from typing import Any
 
     _func: Any = app.function
-    _kwargs: dict[str, Any] = {"image": image, "timeout": 3600, "cpu": 2, "memory": 4096}
+    _kwargs: dict[str, Any] = {
+        "image": image,
+        "timeout": 3600,
+        "cpu": 2,
+        "memory": 4096,
+        "secrets": [modal.Secret.from_name("gemini")],
+    }
     try:
-        # type: ignore[misc]
         run_job = _func(ports={6080: 6080}, **_kwargs)(run_job)
-        run_agent = _func(ports={6080: 6080}, **_kwargs)(run_agent)
     except TypeError:
         run_job = _func(**_kwargs)(run_job)
-        run_agent = _func(**_kwargs)(run_agent)
 except Exception:
-    # As a last resort, leave functions undecorated to avoid import-time crashes
+    # As a last resort, leave function undecorated to avoid crashes
     pass
 
 
