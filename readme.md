@@ -19,3 +19,19 @@ Stopping app - local entrypoint completed.
 
 
 docker build -t devagent-vnc .
+docker run --rm -p 6080:6080 -p 5900:5900 --name devagent-vnc devagent-vnc
+
+docker exec -it devagent-vnc sh -lc '
+(ss -ltnp 2>/dev/null || netstat -tlnp 2>/dev/null) | grep :5900 || echo "nothing on 5900"
+'
+
+
+docker exec -it devagent-vnc sh -lc '
+pkill x11vnc 2>/dev/null || true;
+x11vnc -display :0 -rfbport 5900 -forever -shared -nopw -noxdamage -xkb -listen 0.0.0.0 -bg -o /tmp/x11vnc.log;
+tail -n 20 /tmp/x11vnc.log
+'
+
+
+https://chatgpt.com/s/t_68ae03505b7881918d3977bfaf679659
+

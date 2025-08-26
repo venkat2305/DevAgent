@@ -10,21 +10,13 @@ trap cleanup TERM INT EXIT
 
 # Start virtual display
 Xvfb :0 -screen 0 1920x1080x24 &
-XVFB_PID=$!
+for i in $(seq 1 50); do [ -S /tmp/.X11-unix/X0 ] && break; sleep 0.2; done
 
 # Start window manager (lightweight)
 fluxbox &
 
-# Optional demo windows so noVNC shows activity
-if [ "${DESKTOP_DEMO:-0}" = "1" ]; then
-  # Simple clock as visual heartbeat
-  nohup sh -lc 'xclock -digital -update 1' >/dev/null 2>&1 &
-  # Tail a log file in a terminal for visibility
-  nohup sh -lc 'mkdir -p /tmp; touch /tmp/agent.log; xterm -fa Monospace -fs 11 -geometry 120x28+40+40 -e bash -lc "echo \"[demo] tailing /tmp/agent.log\"; tail -F /tmp/agent.log"' >/dev/null 2>&1 &
-fi
-
 # Start VNC server on :5900 (no auth for dev). Bind IPv4 only to silence IPv6 warning.
-x11vnc -display :0 -nopw -forever -rfbport 5900 -shared -4 &
+x11vnc -display :0 -rfbport 5900 -forever -shared -nopw -noxdamage -xkb -listen 0.0.0.0 -bg
 
 # Expose via noVNC (websockify) on :6080
 websockify --web=/usr/share/novnc/ 6080 localhost:5900 &
