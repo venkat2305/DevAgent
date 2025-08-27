@@ -21,6 +21,11 @@ class DoneArgs(BaseModel):
     reason: str = Field(..., description="Why the task is done")
 
 
+class ScaffoldArgs(BaseModel):
+    recipe_id: str = Field(..., description="Recipe ID (e.g., react-vite-js)")
+    name: Optional[str] = Field(None, description="Project name (optional)")
+
+
 class RouterArgs(BaseModel):
     # Use optional superset of fields to avoid JSON Schema anyOf/oneOf
     command: Optional[str] = Field(
@@ -29,10 +34,16 @@ class RouterArgs(BaseModel):
     path: Optional[str] = Field(None, description="Path for fs_read/fs_write")
     content: Optional[str] = Field(None, description="Content for fs_write")
     reason: Optional[str] = Field(None, description="Why the task is done")
+    recipe_id: Optional[str] = Field(
+        None, description="Recipe ID for scaffold"
+    )
+    name: Optional[str] = Field(
+        None, description="Project name for scaffold"
+    )
 
 
 class RouterAction(BaseModel):
-    tool: Literal["shell", "fs_read", "fs_write", "done"]
+    tool: Literal["shell", "fs_read", "fs_write", "done", "scaffold"]
     args: RouterArgs
 
 

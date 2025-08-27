@@ -21,7 +21,8 @@ from .tools import ToolEnv, make_tools
 SYSTEM_TEXT = (
     "You are a precise coding agent.\n"
     "Return only tool selections as structured output.\n"
-    "Tools available: shell, fs_read, fs_write, done.\n"
+    "Tools available: shell, fs_read, fs_write, scaffold, done.\n"
+    "Use 'scaffold' with recipe_id 'react-vite-js' to create React projects.\n"
     "Never suggest risky shell commands; keep to the job workspace.\n"
 )
 
@@ -170,6 +171,17 @@ def build_graph(job_id: str, task: str):
         print(f"[LOG] done tool output: {res}")
         return {"tool_result": res}
 
+    def run_scaffold(state: State) -> Dict[str, Any]:
+        action = state.pending_action
+        assert action is not None and action.tool == "scaffold"
+        recipe_id = getattr(action.args, "recipe_id", None)
+        name = getattr(action.args, "name", None)
+        print(f"[LOG] Calling scaffold tool with recipe_id: {recipe_id}, "
+              f"name: {name}")
+        res = tools[4].invoke({"recipe_id": recipe_id, "name": name})
+        print(f"[LOG] scaffold tool output: {res}")
+        return {"tool_result": res}
+
     def record_result(state: State) -> Dict[str, Any]:
         action = state.pending_action
         assert action is not None
@@ -191,7 +203,9 @@ def build_graph(job_id: str, task: str):
             "pending_action": None,
             "tool_result": None,
         }
-        if action.tool == "done":
+        # Mark completion either when the explicit done tool is used,
+        # or when a tool returns a done hint (e.g., successful scaffold)
+        if action.tool == "done" or bool(result.get("done")):
             new_state.update({"done": True, "reason": result.get("reason")})
         print(
             f"[LOG] New state after result: "
@@ -216,6 +230,7 @@ def build_graph(job_id: str, task: str):
     sg.add_node("run_fs_read", run_fs_read)
     sg.add_node("run_fs_write", run_fs_write)
     sg.add_node("finish_done", finish_done)
+    sg.add_node("run_scaffold", run_scaffold)
     sg.add_node("record_result", record_result)
     sg.add_node("maybe_interrupt", maybe_interrupt)
 
@@ -234,6 +249,7 @@ def build_graph(job_id: str, task: str):
             "fs_read": "run_fs_read",
             "fs_write": "run_fs_write",
             "done": "finish_done",
+            "scaffold": "run_scaffold",
         },
     )
 
@@ -242,6 +258,7 @@ def build_graph(job_id: str, task: str):
         "run_fs_read",
         "run_fs_write",
         "finish_done",
+        "run_scaffold",
     ):
         sg.add_edge(tool_node, "record_result")
         sg.add_edge("record_result", "maybe_interrupt")

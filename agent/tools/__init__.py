@@ -7,9 +7,11 @@ Exposed tools:
 - FsTool: safe read/write/list under a base directory
 - CodeExecTool: run small Python or Node snippets
 - XdotTool: minimal xdotool wrapper (optional at this stage)
+- ScaffoldTool: create project scaffolds from recipes
 """
 
 from .shell import ShellTool  # noqa: F401
 from .fs import FsTool  # noqa: F401
 from .codeexec import CodeExecTool  # noqa: F401
 from .xdot import XdotTool  # noqa: F401
+from .scaffold import ScaffoldTool  # noqa: F401

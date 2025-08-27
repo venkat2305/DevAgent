@@ -17,6 +17,7 @@ Stopping app - local entrypoint completed.
 3. we need to put some rate limitss
 4. when multiple users request, we need to spin up multiple containers. 
 5. we need to get non-interactive setup commands from ai model or pre-configure certain basic commands like that. 
+6. once everything is setup, test with groq, cerebras for different parts of the system to gain efficiency , give output faster.
 
 docker stop devagent-vnc
 docker run --rm -p 6080:6080 -p 5900:5900 --name devagent-vnc devagent-vnc

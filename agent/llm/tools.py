@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from pathlib import Path
 
 from langchain_core.tools import tool
@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 # Always import from the top-level "tools" package that lives next to "llm"
 # This works both locally (running main.py) and inside the container (/app)
-from tools import ShellTool, FsTool  # type: ignore
+from tools import ShellTool, FsTool, ScaffoldTool  # type: ignore
 
 
 # --- Safety: deny/allow policy for shell ---
@@ -53,6 +53,11 @@ class DoneInput(BaseModel):
     reason: str = Field(..., description="Completion reason")
 
 
+class ScaffoldInput(BaseModel):
+    recipe_id: str = Field(..., description="Recipe ID (e.g., react-vite-js)")
+    name: Optional[str] = Field(None, description="Project name (optional)")
+
+
 class ToolEnv:
     def __init__(self, job_dir: Path, work_dir: Path):
         self.job_dir = Path(job_dir)
@@ -60,6 +65,7 @@ class ToolEnv:
         self.work_dir.mkdir(parents=True, exist_ok=True)
         self.shell = ShellTool(self.work_dir)
         self.fs = FsTool(self.work_dir, allowed_root=self.job_dir)
+        self.scaffold = ScaffoldTool(self.work_dir)
 
 
 def make_tools(env: ToolEnv):
@@ -90,4 +96,21 @@ def make_tools(env: ToolEnv):
         """Signal completion of the task."""
         return {"done": True, "reason": reason}
 
-    return [shell_tool, fs_read_tool, fs_write_tool, done_tool]
+    @tool("scaffold", args_schema=ScaffoldInput)
+    def scaffold_tool(
+        recipe_id: str,
+        name: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Create a project scaffold using a pre-configured recipe."""
+        res = env.scaffold.create(recipe_id, name)
+        # If scaffold succeeded, surface a completion hint so the graph can finish
+        if isinstance(res, dict) and res.get("ok"):
+            # Provide an explicit done flag that record_result can pass through
+            res.setdefault("done", True)
+            res.setdefault(
+                "reason",
+                f"Project scaffolded: {res.get('project_name') or name} ({recipe_id})",
+            )
+        return res
+
+    return [shell_tool, fs_read_tool, fs_write_tool, done_tool, scaffold_tool]

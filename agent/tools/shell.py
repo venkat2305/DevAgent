@@ -65,7 +65,7 @@ if __name__ == "__main__":
     tool = ShellTool(cwd=workdir)
 
     # Example command — you can replace with anything
-    cmd = "npx -y create-vite@latest my-vite-apps --template react"
+    cmd = "npx -y create-vite@latest venkat-app --template react"
 
     print(f"[RUNNING] {cmd}")
     result = tool.run(cmd)

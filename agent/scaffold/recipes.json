@@ -1,0 +1,11 @@
+{
+  "react-vite-js": {
+    "name": "React with Vite (JavaScript)",
+    "command": "npx -y create-vite@latest {name} --template react",
+    "description": "Creates a React app using Vite with JavaScript",
+    "requiresNetwork": true,
+    "nonInteractive": true,
+    "expectedOutputs": ["{name}/package.json", "{name}/src/App.jsx"]
+  }
+}
+
