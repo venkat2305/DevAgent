@@ -13,7 +13,8 @@ class FsTool:
 
     def __init__(self, base_dir: Path, allowed_root: Path | None = None):
         self.base_dir = Path(base_dir).resolve()
-        self.allowed_root = Path(allowed_root).resolve() if allowed_root else self.base_dir
+        self.allowed_root = Path(allowed_root).resolve(
+        ) if allowed_root else self.base_dir
         self.base_dir.mkdir(parents=True, exist_ok=True)
 
     def _resolve(self, path: str) -> Path:
@@ -31,7 +32,11 @@ class FsTool:
             full = self._resolve(path)
             full.parent.mkdir(parents=True, exist_ok=True)
             full.write_text(content, encoding="utf-8")
-            return {"ok": True, "path": str(full), "bytes": len(content.encode("utf-8"))}
+            return {
+                "ok": True,
+                "path": str(full),
+                "bytes": len(
+                    content.encode("utf-8"))}
         except Exception as e:
             return {"ok": False, "error": str(e), "path": path}
 
@@ -43,7 +48,10 @@ class FsTool:
         except Exception as e:
             return {"ok": False, "error": str(e), "path": path}
 
-    def list(self, path: str | None = None, patterns: Iterable[str] | None = None) -> dict:
+    def list(
+            self,
+            path: str | None = None,
+            patterns: Iterable[str] | None = None) -> dict:
         try:
             target = self._resolve(path) if path else self.base_dir
             items = []
@@ -56,4 +64,3 @@ class FsTool:
             return {"ok": True, "base": str(target), "items": items[:2000]}
         except Exception as e:
             return {"ok": False, "error": str(e), "path": path or "."}
-

@@ -15,7 +15,11 @@ class CodeExecTool:
         self.cwd = Path(cwd)
         self.cwd.mkdir(parents=True, exist_ok=True)
 
-    def run(self, language: Literal["python", "node"], code: str, timeout: int = 120) -> dict:
+    def run(self,
+            language: Literal["python",
+                              "node"],
+            code: str,
+            timeout: int = 120) -> dict:
         if language == "python":
             cmd = ["python3", "-c", code]
         elif language == "node":
@@ -23,7 +27,13 @@ class CodeExecTool:
         else:
             return {"ok": False, "error": f"unsupported language: {language}"}
         try:
-            proc = subprocess.run(cmd, cwd=str(self.cwd), capture_output=True, text=True, timeout=timeout)
+            proc = subprocess.run(
+                cmd,
+                cwd=str(
+                    self.cwd),
+                capture_output=True,
+                text=True,
+                timeout=timeout)
             return {
                 "ok": proc.returncode == 0,
                 "language": language,
@@ -32,5 +42,8 @@ class CodeExecTool:
                 "stderr": proc.stderr[-8000:],
             }
         except subprocess.TimeoutExpired:
-            return {"ok": False, "language": language, "exit_code": 124, "stderr": f"timeout after {timeout}s"}
-
+            return {
+                "ok": False,
+                "language": language,
+                "exit_code": 124,
+                "stderr": f"timeout after {timeout}s"}

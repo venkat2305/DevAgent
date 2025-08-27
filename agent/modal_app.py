@@ -7,7 +7,9 @@ image = modal.Image.from_dockerfile("Dockerfile")
 app = modal.App("glassbox-agent", image=image)
 
 # Shared dict to publish session metadata (e.g., VNC URL) by job_id
-SESSION_META = modal.Dict.from_name("glassbox-session-meta", create_if_missing=True)
+SESSION_META = modal.Dict.from_name(
+    "glassbox-session-meta",
+    create_if_missing=True)
 
 
 def run_job(job_id: str, task: str) -> dict:

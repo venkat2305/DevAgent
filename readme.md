@@ -16,10 +16,20 @@ Stopping app - local entrypoint completed.
 2. we need to foucs on scalability and security, what if two users request at the same moment.
 3. we need to put some rate limitss
 
-
+docker stop devagent-vnc
+docker run --rm -p 6080:6080 -p 5900:5900 --name devagent-vnc devagent-vnc
 
 docker build -t devagent-vnc .
-docker run --rm -p 6080:6080 -p 5900:5900 --name devagent-vnc devagent-vnc
+
+docker run --rm \
+  -p 6080:6080 -p 5900:5900 \
+  --name devagent-vnc \
+  --env-file .env \
+  devagent-vnc
+
+
+docker exec -it devagent-vnc bash
+
 
 docker exec -it devagent-vnc sh -lc '
 (ss -ltnp 2>/dev/null || netstat -tlnp 2>/dev/null) | grep :5900 || echo "nothing on 5900"

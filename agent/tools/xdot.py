@@ -19,7 +19,8 @@ class XdotTool:
     Note: requires running inside the container with Xvfb and window manager.
     """
 
-    def run(self, action: Literal["type", "key", "click"], args: str | int) -> dict:
+    def run(self, action: Literal["type", "key",
+            "click"], args: str | int) -> dict:
         if action == "type":
             cmd = ["xdotool", "type", str(args)]
         elif action == "key":
@@ -35,4 +36,3 @@ class XdotTool:
             "exit_code": proc.returncode,
             "stderr": proc.stderr[-4000:],
         }
-

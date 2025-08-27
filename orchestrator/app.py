@@ -121,7 +121,10 @@ def download(job_id: str):
             status_code=404, detail="artifact not available yet")
 
     try:
-        return FileResponse(path, media_type="application/zip", filename=f"{job_id}.zip")
+        return FileResponse(
+            path,
+            media_type="application/zip",
+            filename=f"{job_id}.zip")
     except Exception:
         raise HTTPException(status_code=404, detail="artifact file missing")
 
