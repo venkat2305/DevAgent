@@ -55,3 +55,24 @@ class ShellTool:
                 else "",
                 "stderr": f"timeout after {t}s",
             }
+
+
+if __name__ == "__main__":
+    from pathlib import Path
+
+    # Pick a test working directory
+    workdir = Path("/app/test_job/workdir")
+    tool = ShellTool(cwd=workdir)
+
+    # Example command — you can replace with anything
+    cmd = "npx -y create-vite@latest my-vite-apps --template react"
+
+    print(f"[RUNNING] {cmd}")
+    result = tool.run(cmd)
+
+    print("\n--- RESULT ---")
+    print(f"Exit code: {result['exit_code']}")
+    print("\n--- STDOUT ---")
+    print(result["stdout"])
+    print("\n--- STDERR ---")
+    print(result["stderr"])
