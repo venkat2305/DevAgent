@@ -299,11 +299,19 @@ def run_graph_agent(job_id: str, task: str) -> Dict[str, Any]:
             "checkpoint_ns": "agent", # optional but recommended
         },
     )
-    final_state: State = app.invoke(state, config=config)
+    result_state = app.invoke(state, config=config)
+
+    # Handle both dict and Pydantic State return types from LangGraph
+    if hasattr(result_state, "actions_taken"):
+        actions_list = getattr(result_state, "actions_taken", []) or []
+    elif isinstance(result_state, dict):
+        actions_list = result_state.get("actions_taken", []) or []
+    else:
+        actions_list = []
 
     # Package outputs similar to previous implementation
     report_path = job_dir / "report.md"
-    actions = "\n".join(final_state.actions_taken)
+    actions = "\n".join(actions_list)
     report_path.write_text(
         f"# Job {job_id}\nTask: {task}\n\n## Actions\n{actions}\n",
         encoding="utf-8",
