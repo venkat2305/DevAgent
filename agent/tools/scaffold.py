@@ -88,33 +88,25 @@ class ScaffoldTool:
                     # Hint for the agent's record_result to mark done
                     "reason": f"Scaffolded {recipe_id} project '{name}' successfully",
                 }
-        # If the command executed but project not found, propagate failure
-        return {
-            "ok": False,
-            "recipe_id": recipe_id,
-            "project_name": name,
-            "command": command,
-            "stdout": result.get("stdout", ""),
-            "stderr": result.get("stderr", ""),
-            "error": "scaffold command finished but project directory missing",
-        }
-            else:
-                return {
-                    "ok": False,
-                    "error": f"Project directory {name} not created",
-                    "command": command,
-                    "stdout": result["stdout"],
-                    "stderr": result["stderr"]
-                }
-        else:
+            # If the command executed but project not found, propagate failure
             return {
                 "ok": False,
-                "error": "Scaffold command failed",
+                "recipe_id": recipe_id,
+                "project_name": name,
                 "command": command,
-                "exit_code": result["exit_code"],
-                "stdout": result["stdout"],
-                "stderr": result["stderr"]
+                "stdout": result.get("stdout", ""),
+                "stderr": result.get("stderr", ""),
+                "error": "scaffold command finished but project directory missing",
             }
+        # Command failed
+        return {
+            "ok": False,
+            "error": "Scaffold command failed",
+            "command": command,
+            "exit_code": result.get("exit_code"),
+            "stdout": result.get("stdout", ""),
+            "stderr": result.get("stderr", ""),
+        }
 
     def list_recipes(self) -> Dict[str, Any]:
         """List available recipes."""
