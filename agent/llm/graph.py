@@ -39,10 +39,7 @@ def build_graph(job_id: str, task: str):
     structured = model.with_structured_output(RouterAction)
 
     init_state = State(
-        messages=[
-            {"role": "system", "content": "System prompt"},
-            {"role": "user", "content": task},
-        ],
+        messages=[{"role": "user", "content": task}],
         task=task,
     )
 

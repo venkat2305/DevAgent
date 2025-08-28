@@ -8,7 +8,6 @@ from .schema import State
 
 def decide_action(state: State, structured_model) -> Dict[str, Any]:
     print(f"[LOG] Deciding next action for task: {state.task}")
-    from langchain_core.prompts import ChatPromptTemplate
 
     SYSTEM_TEXT = (
         "You are a precise coding agent.\n"
@@ -19,12 +18,8 @@ def decide_action(state: State, structured_model) -> Dict[str, Any]:
         "Never suggest risky shell commands; keep to the job workspace.\n"
     )
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", SYSTEM_TEXT),
-        ("human", "{task}"),
-    ])
-    messages = prompt.invoke({"task": state.task})
-    action = structured_model.invoke(messages)
+    conversation = [{"role": "system", "content": SYSTEM_TEXT}, *state.messages]
+    action = structured_model.invoke(conversation)
     print(f"[LOG] Decided action: {action}")
     return {"pending_action": action}
 
