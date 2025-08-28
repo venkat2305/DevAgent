@@ -103,14 +103,14 @@ def make_tools(env: ToolEnv):
     ) -> Dict[str, Any]:
         """Create a project scaffold using a pre-configured recipe."""
         res = env.scaffold.create(recipe_id, name)
-        # If scaffold succeeded, surface a completion hint so the graph can finish
+        # If scaffold succeeded, surface a completion hint so the graph can
+        # finish
         if isinstance(res, dict) and res.get("ok"):
             # Provide an explicit done flag that record_result can pass through
             res.setdefault("done", True)
             res.setdefault(
-                "reason",
-                f"Project scaffolded: {res.get('project_name') or name} ({recipe_id})",
-            )
+                "reason", f"Project scaffolded: {
+                    res.get('project_name') or name} ({recipe_id})", )
         return res
 
     return [shell_tool, fs_read_tool, fs_write_tool, done_tool, scaffold_tool]

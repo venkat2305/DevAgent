@@ -18,6 +18,8 @@ Stopping app - local entrypoint completed.
 4. when multiple users request, we need to spin up multiple containers. 
 5. we need to get non-interactive setup commands from ai model or pre-configure certain basic commands like that. 
 6. once everything is setup, test with groq, cerebras for different parts of the system to gain efficiency , give output faster.
+7. we might need to do proper template codes since , default npx methods might give unnecessary code. 
+8. implement scafolding properly.
 
 docker stop devagent-vnc
 docker run --rm -p 6080:6080 -p 5900:5900 --name devagent-vnc devagent-vnc

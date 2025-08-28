@@ -43,7 +43,8 @@ class ScaffoldTool:
             counter += 1
         return name
 
-    def create(self, recipe_id: str, name: Optional[str] = None) -> Dict[str, Any]:
+    def create(self, recipe_id: str,
+               name: Optional[str] = None) -> Dict[str, Any]:
         """Create a project using the specified recipe."""
         recipes = self._load_recipes()
 
@@ -51,7 +52,7 @@ class ScaffoldTool:
             return {
                 "ok": False,
                 "error": f"Recipe '{recipe_id}' not found. Available: " +
-                         f"{list(recipes.keys())}"
+                f"{list(recipes.keys())}"
             }
 
         recipe = recipes[recipe_id]
@@ -94,8 +95,12 @@ class ScaffoldTool:
                 "recipe_id": recipe_id,
                 "project_name": name,
                 "command": command,
-                "stdout": result.get("stdout", ""),
-                "stderr": result.get("stderr", ""),
+                "stdout": result.get(
+                    "stdout",
+                    ""),
+                "stderr": result.get(
+                    "stderr",
+                    ""),
                 "error": "scaffold command finished but project directory missing",
             }
         # Command failed
